@@ -1,67 +1,32 @@
-import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import type { LumenRun, ReviewRun } from "./domain.ts";
+import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import type { LumenCommand } from "./command.ts";
 import { LumenRunner } from "./runner.ts";
-import { ReviewStateStore } from "./state.ts";
 
-/** Coordinates Lumen execution, review history persistence, and annotation reinjection into Pi. */
+/** Runs Lumen diff review and pre-fills Pi's input with exported annotations. */
 export class ReviewFlow {
-  constructor(
-    private readonly pi: ExtensionAPI,
-    private readonly runner: LumenRunner,
-    private readonly state: ReviewStateStore,
-  ) {}
+  constructor(private readonly runner: LumenRunner) {}
 
-  /** Execute a typed Lumen run; review runs capture annotations, passthrough runs only report failures. */
-  async execute(ctx: ExtensionCommandContext, run: LumenRun): Promise<void> {
-    const result = await this.runner.run(ctx, run.kind === "review" ? run.review.command : run.command);
+  async execute(ctx: ExtensionCommandContext, command: LumenCommand): Promise<void> {
+    const result = await this.runner.run(ctx, command);
 
     if (result.error) {
       ctx.ui.notify(`pi-lumen: ${result.error}`, "error");
       return;
     }
 
-    if (run.kind !== "review") {
-      this.notifyPassthroughResult(ctx, result.code);
-      return;
+    if (result.code && result.code !== 0) {
+      ctx.ui.notify(`Lumen exited with code ${result.code}`, "warning");
     }
 
     const annotations = extractAnnotations(result.stdout);
-    const annotationCount = countAnnotations(annotations);
-    await this.recordReview(ctx, run.review, annotationCount, result.code);
-
-    if (annotations) {
-      ctx.ui.notify(`Lumen captured ${annotationCount || 1} annotation${annotationCount === 1 ? "" : "s"}; prefilled input`, "info");
-      ctx.ui.setEditorText(annotationPrompt(run.review, annotations));
-    } else {
+    if (!annotations) {
       ctx.ui.notify("Lumen review closed with no annotations sent", "info");
+      return;
     }
-  }
 
-  private async recordReview(ctx: ExtensionCommandContext, review: ReviewRun, annotationCount: number, exitCode: number | null): Promise<void> {
-    const warn = (message: string) => ctx.ui.notify(message, "warning");
-    await this.state.upsert(
-      {
-        key: review.key,
-        label: review.label,
-        target: review.intent.target,
-        cwd: ctx.cwd,
-        viewedAt: Date.now(),
-        ...(annotationCount > 0 ? { annotations: annotationCount } : {}),
-      },
-      warn,
-    );
-
-    this.pi.appendEntry("lumen.review", {
-      command: review.command.display,
-      key: review.key,
-      label: review.label,
-      annotations: annotationCount,
-      exitCode,
-    });
-  }
-
-  private notifyPassthroughResult(ctx: ExtensionCommandContext, code: number | null): void {
-    if (code && code !== 0) ctx.ui.notify(`Lumen exited with code ${code}`, "warning");
+    const annotationCount = countAnnotations(annotations);
+    ctx.ui.notify(`Lumen captured ${annotationCount || 1} annotation${annotationCount === 1 ? "" : "s"}; prefilled input`, "info");
+    ctx.ui.setEditorText(annotations);
   }
 }
 
@@ -78,12 +43,12 @@ function extractAnnotations(stdout: string): string {
 
   if (!content) return "";
 
-  const annotationBlocks = content
+  return content
     .split(/\n\s*---\s*\n/)
     .map((block) => block.trim())
-    .filter(hasAnnotationLocation);
-
-  return annotationBlocks.join("\n---\n").trim();
+    .filter(hasAnnotationLocation)
+    .join("\n---\n")
+    .trim();
 }
 
 function stripTerminalSequences(text: string): string {
@@ -104,8 +69,4 @@ function countAnnotations(stdout: string): number {
   const trimmed = stdout.trim();
   if (!trimmed) return 0;
   return trimmed.split(/\n---\n/).filter(hasAnnotationLocation).length;
-}
-
-function annotationPrompt(_review: ReviewRun, annotations: string): string {
-  return annotations.trim();
 }

@@ -1,6 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import type { LumenCommand } from "./domain.ts";
+import type { LumenCommand } from "./command.ts";
 
 export type LumenResult = { code: number | null; stdout: string; error?: string };
 
@@ -24,7 +24,7 @@ export class LumenRunner {
     try {
       process.stdout.write("\x1b[2J\x1b[H");
       process.stdout.write(`Running ${command.display}\n`);
-      process.stdout.write("Annotate with i, open annotations with I, press s to send annotations back to pi.\n\n");
+      process.stdout.write("Annotate with i, open annotations with I, press s to prefill Pi's input.\n\n");
       return this.spawnInteractive(cwd, command);
     } finally {
       tui.start();

@@ -1,16 +1,16 @@
 {
   "name": "pi-lumen",
   "version": "0.1.0",
-  "description": "Pi extension for Lumen diff review: open PRs/ranges from Pi, capture annotations, and feed them back to the agent.",
+  "private": true,
+  "description": "Pi extension for Lumen diff review.",
   "type": "module",
-  "keywords": ["pi-package", "pi", "lumen", "code-review", "diff", "github"],
-  "license": "MIT",
-  "author": "Aryaman",
+  "keywords": ["pi-package", "pi", "lumen", "code-review", "diff"],
+  "author": "ad-world",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ad-world/pi-lumen.git"
   },
-  "files": ["src", "README.md", "LICENSE"],
+  "files": ["src"],
   "pi": {
     "extensions": ["./src/index.ts"]
   },
@@ -31,7 +31,6 @@
     "node": ">=22"
   },
   "dependencies": {
-    "arktype": "^2.2.1",
     "string-argv": "^0.3.2"
   }
 }
