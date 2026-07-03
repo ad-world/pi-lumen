@@ -24,7 +24,9 @@ export class LumenRunner {
     try {
       process.stdout.write("\x1b[2J\x1b[H");
       process.stdout.write(`Running ${command.display}\n`);
-      process.stdout.write("Annotate with i, open annotations with I, press s to prefill Pi's input.\n\n");
+      process.stdout.write(
+        "Annotate with i, open annotations with I, press s to prefill Pi's input.\n\n",
+      );
       return this.spawnInteractive(cwd, command);
     } finally {
       tui.start();
@@ -32,7 +34,11 @@ export class LumenRunner {
     }
   }
 
-  private spawn(cwd: string, command: LumenCommand, inheritTerminal: boolean): Promise<LumenResult> {
+  private spawn(
+    cwd: string,
+    command: LumenCommand,
+    inheritTerminal: boolean,
+  ): Promise<LumenResult> {
     if (inheritTerminal) return Promise.resolve(this.spawnInteractive(cwd, command));
 
     return new Promise((resolve) => {

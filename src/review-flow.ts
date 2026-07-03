@@ -1,4 +1,5 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { countAnnotations, extractAnnotations } from "./annotations.ts";
 import type { LumenCommand } from "./command.ts";
 import { LumenRunner } from "./runner.ts";
 
@@ -25,48 +26,10 @@ export class ReviewFlow {
     }
 
     const annotationCount = countAnnotations(annotations);
-    ctx.ui.notify(`Lumen captured ${annotationCount || 1} annotation${annotationCount === 1 ? "" : "s"}; prefilled input`, "info");
+    ctx.ui.notify(
+      `Lumen captured ${annotationCount || 1} annotation${annotationCount === 1 ? "" : "s"}; prefilled input`,
+      "info",
+    );
     ctx.ui.setEditorText(annotations);
   }
-}
-
-function extractAnnotations(stdout: string): string {
-  const cleaned = stripTerminalSequences(stdout)
-    .replace(/\r/g, "\n")
-    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "");
-
-  const content = cleaned
-    .split("\n")
-    .filter((line) => !isLumenStatusLine(line.trim()))
-    .join("\n")
-    .trim();
-
-  if (!content) return "";
-
-  return content
-    .split(/\n\s*---\s*\n/)
-    .map((block) => block.trim())
-    .filter(hasAnnotationLocation)
-    .join("\n---\n")
-    .trim();
-}
-
-function stripTerminalSequences(text: string): string {
-  return text
-    .replace(/\x1B\][^\x07]*(?:\x07|\x1B\\)/g, "")
-    .replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
-}
-
-function isLumenStatusLine(line: string): boolean {
-  return /^[⠋⠙⠹⠸⠼⠴⠦⠧✓]\s+(?:Fetching|Fetched|Syncing|\d+ files? marked as viewed\b)/.test(line);
-}
-
-function hasAnnotationLocation(block: string): boolean {
-  return block.split("\n").some((line) => /^\s*(?:\*\*)?.+?(?:\*\*)?\s+line\s+\d+\s+\((?:LEFT|RIGHT)\)\s*$/i.test(line));
-}
-
-function countAnnotations(stdout: string): number {
-  const trimmed = stdout.trim();
-  if (!trimmed) return 0;
-  return trimmed.split(/\n---\n/).filter(hasAnnotationLocation).length;
 }
