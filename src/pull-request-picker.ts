@@ -1,0 +1,46 @@
+import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
+import { diffCommand } from "./command.ts";
+import type { PullRequest, PullRequestProvider } from "./pull-requests.ts";
+
+/** Shows recent pull requests and turns the selected one into a Lumen command. */
+export async function pickPullRequest(
+  ctx: ExtensionCommandContext,
+  provider: PullRequestProvider,
+): Promise<ReturnType<typeof diffCommand> | null> {
+  try {
+    const pullRequests = await provider.listRecent(ctx.cwd);
+    if (pullRequests.length === 0) {
+      ctx.ui.notify("No open pull requests found for this repository.", "info");
+      return null;
+    }
+
+    const selected = await ctx.ui.select(
+      "Select a recent pull request",
+      pullRequests.map(formatPullRequest),
+    );
+    if (!selected) return null;
+
+    const pullRequest = pullRequests.find((pr) => formatPullRequest(pr) === selected);
+    if (!pullRequest) {
+      ctx.ui.notify("The selected pull request is no longer available.", "error");
+      return null;
+    }
+
+    return diffCommand(`--pr ${pullRequest.number}`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    ctx.ui.notify(`pi-lumen: ${message}`, "error");
+    return null;
+  }
+}
+
+function formatPullRequest(pullRequest: PullRequest): string {
+  const draft = pullRequest.isDraft ? " [draft]" : "";
+  const updated = formatUpdatedDate(pullRequest.updatedAt);
+  return `#${pullRequest.number} · ${pullRequest.title} · ${pullRequest.author} · updated ${updated}${draft}`;
+}
+
+function formatUpdatedDate(updatedAt: string): string {
+  const date = new Date(updatedAt);
+  return Number.isNaN(date.getTime()) ? updatedAt : date.toISOString().slice(0, 10);
+}
