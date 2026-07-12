@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { diffCommand } from "./command.ts";
-import { LumenRunner } from "./runner.ts";
+import { diffCommand } from "../src/command.ts";
+import { LumenRunner } from "../src/runner.ts";
 
 describe("LumenRunner", () => {
   test("rejects non-TUI modes before starting Lumen", async () => {

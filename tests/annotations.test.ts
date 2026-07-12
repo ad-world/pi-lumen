@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { countAnnotations, extractAnnotations } from "./annotations.ts";
+import { countAnnotations, extractAnnotations } from "../src/annotations.ts";
 
 describe("extractAnnotations", () => {
   test("keeps a single valid annotation block with a location line", () => {

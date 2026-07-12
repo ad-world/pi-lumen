@@ -1,6 +1,7 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { diffCommand } from "./command.ts";
 import type { PullRequest, PullRequestProvider } from "./pull-requests.ts";
+import { formatDate } from "./utils/date.ts";
 
 /** Shows recent pull requests and turns the selected one into a Lumen command. */
 export async function pickPullRequest(
@@ -36,11 +37,6 @@ export async function pickPullRequest(
 
 function formatPullRequest(pullRequest: PullRequest): string {
   const draft = pullRequest.isDraft ? " [draft]" : "";
-  const updated = formatUpdatedDate(pullRequest.updatedAt);
+  const updated = formatDate(pullRequest.updatedAt);
   return `#${pullRequest.number} · ${pullRequest.title} · ${pullRequest.author} · updated ${updated}${draft}`;
-}
-
-function formatUpdatedDate(updatedAt: string): string {
-  const date = new Date(updatedAt);
-  return Number.isNaN(date.getTime()) ? updatedAt : date.toISOString().slice(0, 10);
 }

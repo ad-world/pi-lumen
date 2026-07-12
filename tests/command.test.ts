@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { diffCommand } from "./command.ts";
+import { diffCommand } from "../src/command.ts";
 
 describe("diffCommand", () => {
   test("empty input produces the base lumen diff command", () => {

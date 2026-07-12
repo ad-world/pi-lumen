@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { type } from "arktype";
 
 export type PullRequest = {
   number: number;
@@ -21,14 +22,16 @@ export interface PullRequestProvider {
   listRecent(cwd: string): Promise<PullRequest[]>;
 }
 
-type GhPullRequest = {
-  number?: unknown;
-  title?: unknown;
-  author?: { login?: unknown } | null;
-  updatedAt?: unknown;
-  isDraft?: unknown;
-  url?: unknown;
-};
+const ghPullRequestSchema = type({
+  number: "number",
+  title: "string",
+  author: { login: "string" },
+  updatedAt: "string",
+  isDraft: "boolean",
+  url: "string",
+});
+
+type GhPullRequest = typeof ghPullRequestSchema.infer;
 
 const DEFAULT_LIMIT = 20;
 
@@ -79,16 +82,11 @@ export class GhPullRequestProvider implements PullRequestProvider {
 }
 
 function parsePullRequest(value: unknown): PullRequest {
-  const pr = value as GhPullRequest;
-  if (
-    typeof pr.number !== "number" ||
-    typeof pr.title !== "string" ||
-    typeof pr.author?.login !== "string" ||
-    typeof pr.updatedAt !== "string" ||
-    typeof pr.isDraft !== "boolean" ||
-    typeof pr.url !== "string"
-  ) {
-    throw new Error("GitHub CLI returned a pull request with missing fields.");
+  let pr: GhPullRequest;
+  try {
+    pr = ghPullRequestSchema.assert(value);
+  } catch {
+    throw new Error("GitHub CLI returned a pull request with missing or invalid fields.");
   }
 
   return {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
-import { pickPullRequest } from "./pull-request-picker.ts";
-import type { PullRequest } from "./pull-requests.ts";
+import { pickPullRequest } from "../src/pull-request-picker.ts";
+import type { PullRequest } from "../src/pull-requests.ts";
 
 const pullRequests: PullRequest[] = [
   {

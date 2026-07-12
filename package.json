@@ -22,12 +22,13 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "lint": "oxlint .",
-    "format": "oxfmt --write package.json tsconfig.json src .oxlintrc.json",
-    "format:check": "oxfmt --check package.json tsconfig.json src .oxlintrc.json",
+    "format": "oxfmt --write package.json tsconfig.json src tests .oxlintrc.json",
+    "format:check": "oxfmt --check package.json tsconfig.json src tests .oxlintrc.json",
     "pack:dry": "bun pm pack --dry-run",
     "check": "bun run typecheck && bun test && bun run lint && bun run format:check && bun run pack:dry"
   },
   "dependencies": {
+    "arktype": "^2.2.3",
     "string-argv": "^0.3.2"
   },
   "devDependencies": {
