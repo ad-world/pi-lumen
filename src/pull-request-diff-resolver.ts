@@ -100,7 +100,7 @@ export class GhPullRequestDiffResolver implements PullRequestDiffResolver {
     const repositoryUrl = this.repositoryGitUrl(metadata.url, metadata.number);
     if (!repositoryUrl || !(await this.isValidBranch(cwd, metadata.baseRefName))) return false;
 
-    const namespace = `refs/pi-lumen/pr/${metadata.number}`;
+    const namespace = `refs/pi-lumen-review/pr/${metadata.number}`;
     const result = await this.runProcess(
       "git",
       [

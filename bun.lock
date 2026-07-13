@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "pi-lumen",
+      "name": "pi-lumen-review",
       "dependencies": {
         "arktype": "^2.2.3",
         "string-argv": "^0.3.2",

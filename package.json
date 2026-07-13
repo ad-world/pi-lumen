@@ -1,7 +1,7 @@
 {
-  "name": "pi-lumen",
+  "name": "pi-lumen-review",
   "version": "0.1.0",
-  "description": "Pi extension for Lumen diff review.",
+  "description": "Pi extension for Lumen code review.",
   "keywords": [
     "code-review",
     "diff",

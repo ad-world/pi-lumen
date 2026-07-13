@@ -11,7 +11,7 @@ export class ReviewFlow {
     const result = await this.runner.run(ctx, command);
 
     if (result.error) {
-      ctx.ui.notify(`pi-lumen: ${result.error}`, "error");
+      ctx.ui.notify(`pi-lumen-review: ${result.error}`, "error");
       return;
     }
 

@@ -73,8 +73,8 @@ describe("GhPullRequestDiffResolver", () => {
         "--no-recurse-submodules",
         "--no-write-fetch-head",
         "https://github.com/example/repo.git",
-        "+refs/heads/main:refs/pi-lumen/pr/7/base",
-        "+refs/pull/7/head:refs/pi-lumen/pr/7/head",
+        "+refs/heads/main:refs/pi-lumen-review/pr/7/base",
+        "+refs/pull/7/head:refs/pi-lumen-review/pr/7/head",
       ],
     });
     expect(fetch?.args).not.toContain("--depth=1");

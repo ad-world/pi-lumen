@@ -35,7 +35,7 @@ export async function pickPullRequest(
       : diffCommand(`--pr ${resolution.reference}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    ctx.ui.notify(`pi-lumen: ${message}`, "error");
+    ctx.ui.notify(`pi-lumen-review: ${message}`, "error");
     return null;
   }
 }

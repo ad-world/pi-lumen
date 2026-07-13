@@ -1,6 +1,6 @@
-# pi-lumen
+# Pi Lumen Review
 
-Pi extension for interactive [Lumen](https://github.com/jnsahaj/lumen) diff review. Run `/lumen` to choose a recent open GitHub pull request, or pass Lumen `diff` arguments directly. Exported Lumen annotations are prefilled into Pi's editor.
+Pi extension for interactive [Lumen](https://github.com/jnsahaj/lumen) code review. Run `/lumen` to choose a recent open GitHub pull request, or pass Lumen `diff` arguments directly. Exported Lumen annotations are prefilled into Pi's editor.
 
 ## Prerequisites
 
@@ -20,19 +20,19 @@ Cargo users can install Lumen with `cargo install lumen`.
 ## Install
 
 ```sh
-pi install npm:pi-lumen
+pi install npm:pi-lumen-review
 ```
 
 Try it for one run:
 
 ```sh
-pi -e npm:pi-lumen
+pi -e npm:pi-lumen-review
 ```
 
 For local development:
 
 ```sh
-pi -e /path/to/pi-lumen
+pi -e /path/to/pi-lumen-review
 ```
 
 ## Usage
