@@ -1,5 +1,6 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { diffCommand } from "./command.ts";
+import { GhPullRequestDiffResolver } from "./pull-request-diff-resolver.ts";
 import { pickPullRequest } from "./pull-request-picker.ts";
 import { GhPullRequestProvider } from "./pull-requests.ts";
 import { ReviewFlow } from "./review-flow.ts";
@@ -9,6 +10,7 @@ import { LumenRunner } from "./runner.ts";
 export default function piLumen(pi: ExtensionAPI): void {
   const flow = new ReviewFlow(new LumenRunner());
   const pullRequests = new GhPullRequestProvider();
+  const pullRequestDiffs = new GhPullRequestDiffResolver();
 
   pi.registerCommand("lumen", {
     description: "Open Lumen diff review; choose a PR when no arguments are provided",
@@ -23,7 +25,9 @@ export default function piLumen(pi: ExtensionAPI): void {
         return;
       }
 
-      const command = args.trim() ? diffCommand(args) : await pickPullRequest(ctx, pullRequests);
+      const command = args.trim()
+        ? diffCommand(args)
+        : await pickPullRequest(ctx, pullRequests, pullRequestDiffs);
       if (command) await flow.execute(ctx, command);
     },
   });

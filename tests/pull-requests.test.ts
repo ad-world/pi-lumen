@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { GhPullRequestProvider, type ProcessResult } from "../src/pull-requests.ts";
+import { GhPullRequestProvider } from "../src/pull-requests.ts";
+import type { ProcessResult } from "../src/process.ts";
 
 const pullRequestJson = JSON.stringify([
   {

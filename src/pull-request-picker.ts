@@ -1,5 +1,6 @@
 import type { ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { diffCommand } from "./command.ts";
+import type { PullRequestDiffResolver } from "./pull-request-diff-resolver.ts";
 import type { PullRequest, PullRequestProvider } from "./pull-requests.ts";
 import { formatDate } from "./utils/date.ts";
 
@@ -7,6 +8,7 @@ import { formatDate } from "./utils/date.ts";
 export async function pickPullRequest(
   ctx: ExtensionCommandContext,
   provider: PullRequestProvider,
+  resolver: PullRequestDiffResolver,
 ): Promise<ReturnType<typeof diffCommand> | null> {
   try {
     const pullRequests = await provider.listRecent(ctx.cwd);
@@ -27,7 +29,10 @@ export async function pickPullRequest(
       return null;
     }
 
-    return diffCommand(`--pr ${pullRequest.number}`);
+    const resolution = await resolver.resolve(ctx.cwd, pullRequest);
+    return resolution.kind === "local"
+      ? diffCommand(resolution.reference)
+      : diffCommand(`--pr ${resolution.reference}`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     ctx.ui.notify(`pi-lumen: ${message}`, "error");

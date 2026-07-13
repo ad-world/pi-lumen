@@ -1,5 +1,5 @@
-import { spawn } from "node:child_process";
 import { type } from "arktype";
+import { defaultRunProcess, type ProcessRunner } from "./process.ts";
 
 export type PullRequest = {
   number: number;
@@ -9,14 +9,6 @@ export type PullRequest = {
   isDraft: boolean;
   url: string;
 };
-
-export type ProcessResult = { code: number | null; stdout: string; stderr: string; error?: string };
-
-export type ProcessRunner = (
-  program: string,
-  args: string[],
-  cwd: string,
-) => Promise<ProcessResult>;
 
 export interface PullRequestProvider {
   listRecent(cwd: string): Promise<PullRequest[]>;
@@ -98,25 +90,3 @@ function parsePullRequest(value: unknown): PullRequest {
     url: pr.url,
   };
 }
-
-const defaultRunProcess: ProcessRunner = (program, args, cwd) =>
-  new Promise((resolve) => {
-    let stdout = "";
-    let stderr = "";
-    const child = spawn(program, args, {
-      cwd,
-      env: process.env,
-      stdio: ["ignore", "pipe", "pipe"],
-    });
-
-    child.stdout.setEncoding("utf8");
-    child.stdout.on("data", (chunk: string) => {
-      stdout += chunk;
-    });
-    child.stderr.setEncoding("utf8");
-    child.stderr.on("data", (chunk: string) => {
-      stderr += chunk;
-    });
-    child.on("error", (error) => resolve({ code: null, stdout, stderr, error: error.message }));
-    child.on("close", (code) => resolve({ code, stdout, stderr }));
-  });

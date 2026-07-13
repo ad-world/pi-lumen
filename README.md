@@ -43,7 +43,7 @@ From a GitHub repository in Pi's interactive TUI:
 /lumen
 ```
 
-With no arguments, `/lumen` lists up to 20 recent open pull requests from the current repository. Select one to open it in Lumen.
+With no arguments, `/lumen` lists up to 20 recent open pull requests from the current repository. Select one to open it in Lumen. The extension verifies the PR's current base and head commits with GitHub and uses the local Git graph when it is complete. If commits or ancestry are missing, it narrowly fetches the PR refs; if that cannot produce a valid local range, it falls back to Lumen's GitHub PR mode.
 
 Explicit arguments bypass the picker and are passed to `lumen diff`:
 

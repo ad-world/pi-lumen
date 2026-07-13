@@ -32,17 +32,38 @@ describe("pickPullRequest", () => {
       {
         listRecent: async () => pullRequests,
       },
+      {
+        resolve: async () => ({ kind: "local", reference: "base...head" }),
+      },
     );
 
-    expect(result?.args).toEqual(["diff", "--pr", "7"]);
+    expect(result?.args).toEqual(["diff", "base...head"]);
     expect(notifications).toEqual([]);
+  });
+
+  test("falls back to Lumen PR mode when no local range can be proven", async () => {
+    const result = await pickPullRequest(
+      context("#7 · Add picker · contributor · updated 2026-07-12", []),
+      { listRecent: async () => pullRequests },
+      {
+        resolve: async () => ({
+          kind: "remote",
+          reference: pullRequests[0]!.url,
+          reason: "fetch-failed",
+        }),
+      },
+    );
+
+    expect(result?.args).toEqual(["diff", "--pr", "https://github.com/example/repo/pull/7"]);
   });
 
   test("does not launch a command when the picker is cancelled", async () => {
     const notifications: string[] = [];
-    const result = await pickPullRequest(context(undefined, notifications), {
-      listRecent: async () => pullRequests,
-    });
+    const result = await pickPullRequest(
+      context(undefined, notifications),
+      { listRecent: async () => pullRequests },
+      { resolve: async () => ({ kind: "local", reference: "base...head" }) },
+    );
 
     expect(result).toBeNull();
     expect(notifications).toEqual([]);
@@ -50,9 +71,11 @@ describe("pickPullRequest", () => {
 
   test("notifies when there are no open pull requests", async () => {
     const notifications: string[] = [];
-    const result = await pickPullRequest(context(undefined, notifications), {
-      listRecent: async () => [],
-    });
+    const result = await pickPullRequest(
+      context(undefined, notifications),
+      { listRecent: async () => [] },
+      { resolve: async () => ({ kind: "local", reference: "base...head" }) },
+    );
 
     expect(result).toBeNull();
     expect(notifications).toEqual(["No open pull requests found for this repository."]);
