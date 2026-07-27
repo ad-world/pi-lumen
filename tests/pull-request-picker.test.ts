@@ -11,6 +11,7 @@ const pullRequests: PullRequest[] = [
     updatedAt: "2026-07-12T10:00:00Z",
     isDraft: false,
     url: "https://github.com/example/repo/pull/7",
+    isCurrentBranch: false,
   },
 ];
 

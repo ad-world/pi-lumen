@@ -41,7 +41,8 @@ export async function pickPullRequest(
 }
 
 function formatPullRequest(pullRequest: PullRequest): string {
+  const current = pullRequest.isCurrentBranch ? "★ " : "";
   const draft = pullRequest.isDraft ? " [draft]" : "";
   const updated = formatDate(pullRequest.updatedAt);
-  return `#${pullRequest.number} · ${pullRequest.title} · ${pullRequest.author} · updated ${updated}${draft}`;
+  return `${current}#${pullRequest.number} · ${pullRequest.title} · ${pullRequest.author} · updated ${updated}${draft}`;
 }

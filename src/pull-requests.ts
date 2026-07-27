@@ -8,6 +8,7 @@ export type PullRequest = {
   updatedAt: string;
   isDraft: boolean;
   url: string;
+  isCurrentBranch: boolean;
 };
 
 export interface PullRequestProvider {
@@ -35,6 +36,7 @@ export class GhPullRequestProvider implements PullRequestProvider {
   ) {}
 
   async listRecent(cwd: string): Promise<PullRequest[]> {
+    const currentBranchPullRequest = await this.currentBranchPullRequest(cwd);
     const result = await this.runProcess(
       "gh",
       [
@@ -42,6 +44,8 @@ export class GhPullRequestProvider implements PullRequestProvider {
         "list",
         "--state",
         "open",
+        "--author",
+        "@me",
         "--limit",
         String(this.limit),
         "--json",
@@ -63,7 +67,50 @@ export class GhPullRequestProvider implements PullRequestProvider {
 
     if (!Array.isArray(data))
       throw new Error("GitHub CLI returned an unexpected pull request response.");
-    return data.map(parsePullRequest);
+
+    const pullRequests = data.map(parsePullRequest);
+    if (!currentBranchPullRequest) return pullRequests;
+
+    return [
+      currentBranchPullRequest,
+      ...pullRequests.filter(
+        (pullRequest) => pullRequest.number !== currentBranchPullRequest.number,
+      ),
+    ];
+  }
+
+  private async currentBranchPullRequest(cwd: string): Promise<PullRequest | null> {
+    const branch = await this.runProcess("git", ["branch", "--show-current"], cwd);
+    const branchName = branch.code === 0 && !branch.error ? branch.stdout.trim() : "";
+    if (!branchName) return null;
+
+    const result = await this.runProcess(
+      "gh",
+      [
+        "pr",
+        "list",
+        "--state",
+        "open",
+        "--author",
+        "@me",
+        "--head",
+        branchName,
+        "--limit",
+        "1",
+        "--json",
+        "number,title,author,updatedAt,isDraft,url",
+      ],
+      cwd,
+    );
+    if (result.error || result.code !== 0) return null;
+
+    try {
+      const data: unknown = JSON.parse(result.stdout);
+      if (!Array.isArray(data) || data.length === 0) return null;
+      return { ...parsePullRequest(data[0]), isCurrentBranch: true };
+    } catch {
+      return null;
+    }
   }
 
   private processError(message: string): string {
@@ -88,5 +135,6 @@ function parsePullRequest(value: unknown): PullRequest {
     updatedAt: pr.updatedAt,
     isDraft: pr.isDraft,
     url: pr.url,
+    isCurrentBranch: false,
   };
 }

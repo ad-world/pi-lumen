@@ -16,7 +16,7 @@ const pullRequestJson = JSON.stringify([
 function successfulProcess(
   stdout: string,
 ): (program: string, args: string[], cwd: string) => Promise<ProcessResult> {
-  return async () => ({ code: 0, stdout, stderr: "" });
+  return async (program) => ({ code: 0, stdout: program === "git" ? "" : stdout, stderr: "" });
 }
 
 describe("GhPullRequestProvider", () => {
@@ -31,6 +31,7 @@ describe("GhPullRequestProvider", () => {
         updatedAt: "2026-07-12T10:00:00Z",
         isDraft: false,
         url: "https://github.com/ad-world/pi-lumen/pull/42",
+        isCurrentBranch: false,
       },
     ]);
   });
@@ -51,6 +52,8 @@ describe("GhPullRequestProvider", () => {
         "list",
         "--state",
         "open",
+        "--author",
+        "@me",
         "--limit",
         "20",
         "--json",
