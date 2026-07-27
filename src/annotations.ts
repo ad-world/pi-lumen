@@ -14,7 +14,7 @@ export function extractAnnotations(stdout: string): string {
   return content
     .split(/\n\s*---\s*\n/)
     .map((block) => block.trim())
-    .filter(hasAnnotationLocation)
+    .filter(hasAnnotationHeader)
     .join("\n---\n")
     .trim();
 }
@@ -29,14 +29,18 @@ function isLumenStatusLine(line: string): boolean {
   return /^[⠋⠙⠹⠸⠼⠴⠦⠧✓]\s+(?:Fetching|Fetched|Syncing|\d+ files? marked as viewed\b)/.test(line);
 }
 
-function hasAnnotationLocation(block: string): boolean {
-  return block
-    .split("\n")
-    .some((line) => /^\s*(?:\*\*)?.+?(?:\*\*)?\s+line\s+\d+\s+\((?:LEFT|RIGHT)\)\s*$/i.test(line));
+function hasAnnotationHeader(block: string): boolean {
+  return block.split("\n").some((line) => {
+    const trimmed = line.trim();
+    return (
+      /^\*\*[^*\n]+\*\*\s*$/.test(trimmed) ||
+      /^(?:\*\*)?.+?(?:\*\*)?\s+lines?\s+\d+(?:-\d+)?\s+\((?:LEFT|RIGHT)\)\s*$/i.test(trimmed)
+    );
+  });
 }
 
 export function countAnnotations(stdout: string): number {
   const trimmed = stdout.trim();
   if (!trimmed) return 0;
-  return trimmed.split(/\n---\n/).filter(hasAnnotationLocation).length;
+  return trimmed.split(/\n---\n/).filter(hasAnnotationHeader).length;
 }

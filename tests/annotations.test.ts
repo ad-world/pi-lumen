@@ -27,6 +27,23 @@ Keep this annotation.`);
 Preserve this annotation.`);
   });
 
+  test("keeps file-level annotations without a line location", () => {
+    const stdout = `# https://github.com/example/repo/pull/7
+
+**src/index.ts**
+
+This comment applies to the whole file.`;
+
+    expect(extractAnnotations(stdout)).toBe(stdout);
+  });
+
+  test("keeps multi-line annotations", () => {
+    const stdout = `**src/index.ts** lines 12-14 (RIGHT)
+This annotation covers a range.`;
+
+    expect(extractAnnotations(stdout)).toBe(stdout);
+  });
+
   test("splits blocks on separators, discards blocks without locations, and rejoins valid blocks", () => {
     const stdout = `src/index.ts line 12 (RIGHT)
 First annotation.
@@ -53,6 +70,10 @@ src/runner.ts line 8 (LEFT)
 Second annotation.`;
 
     expect(countAnnotations(annotations)).toBe(2);
+  });
+
+  test("counts file-level annotations", () => {
+    expect(countAnnotations("**src/index.ts**\nA file comment.")).toBe(1);
   });
 
   test("returns 0 for empty or whitespace input", () => {
