@@ -12,10 +12,14 @@ export async function pickPullRequest(
 ): Promise<ReturnType<typeof diffCommand> | null> {
   try {
     const currentBranch = await provider.currentBranch?.(ctx.cwd);
+    const currentBaseBranch = await provider.currentBranchBase?.(ctx.cwd);
     const pullRequests = (await provider.listRecent(ctx.cwd)).sort(
       (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt),
     );
-    const currentBranchOption = currentBranch ? `★ Current branch · main..${currentBranch}` : null;
+    const currentBranchOption =
+      currentBranch && currentBaseBranch
+        ? `★ Current branch · ${currentBaseBranch}..${currentBranch}`
+        : null;
     if (pullRequests.length === 0 && !currentBranchOption) {
       ctx.ui.notify("No open pull requests found for this repository.", "info");
       return null;
@@ -31,8 +35,8 @@ export async function pickPullRequest(
     const selected = await ctx.ui.select("Select a diff to review", options);
     if (!selected) return null;
 
-    if (selected === currentBranchOption && currentBranch) {
-      return diffCommand(`main..${currentBranch}`);
+    if (selected === currentBranchOption && currentBranch && currentBaseBranch) {
+      return diffCommand(`${currentBaseBranch}..${currentBranch}`);
     }
 
     const pullRequest = pullRequests.find((pr) => formatPullRequest(pr) === selected);
