@@ -55,7 +55,7 @@ describe("GhPullRequestProvider", () => {
         "--author",
         "@me",
         "--limit",
-        "20",
+        "1000",
         "--json",
         "number,title,author,updatedAt,isDraft,url",
       ],

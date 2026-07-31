@@ -13,6 +13,7 @@ export type PullRequest = {
 
 export interface PullRequestProvider {
   listRecent(cwd: string): Promise<PullRequest[]>;
+  currentBranch?(cwd: string): Promise<string | null>;
 }
 
 const ghPullRequestSchema = type({
@@ -26,7 +27,8 @@ const ghPullRequestSchema = type({
 
 type GhPullRequest = typeof ghPullRequestSchema.infer;
 
-const DEFAULT_LIMIT = 20;
+// gh paginates until this cap; keep it high so the picker does not hide older PRs.
+const DEFAULT_LIMIT = 1000;
 
 /** Lists recent open pull requests through the GitHub CLI. */
 export class GhPullRequestProvider implements PullRequestProvider {
@@ -79,9 +81,15 @@ export class GhPullRequestProvider implements PullRequestProvider {
     ];
   }
 
+  async currentBranch(cwd: string): Promise<string | null> {
+    const result = await this.runProcess("git", ["branch", "--show-current"], cwd);
+    if (result.error || result.code !== 0) return null;
+    const branch = result.stdout.trim();
+    return branch || null;
+  }
+
   private async currentBranchPullRequest(cwd: string): Promise<PullRequest | null> {
-    const branch = await this.runProcess("git", ["branch", "--show-current"], cwd);
-    const branchName = branch.code === 0 && !branch.error ? branch.stdout.trim() : "";
+    const branchName = await this.currentBranch(cwd);
     if (!branchName) return null;
 
     const result = await this.runProcess(
