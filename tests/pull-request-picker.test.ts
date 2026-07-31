@@ -44,15 +44,16 @@ describe("pickPullRequest", () => {
 
   test("defaults to the current branch diff", async () => {
     const result = await pickPullRequest(
-      context("★ Current branch · main..feature", []),
+      context("★ Current branch · develop..feature", []),
       {
         currentBranch: async () => "feature",
+        currentBranchBase: async () => "develop",
         listRecent: async () => pullRequests,
       },
       { resolve: async () => ({ kind: "local", reference: "unused" }) },
     );
 
-    expect(result?.args).toEqual(["diff", "main..feature"]);
+    expect(result?.args).toEqual(["diff", "develop..feature"]);
   });
 
   test("falls back to Lumen PR mode when no local range can be proven", async () => {

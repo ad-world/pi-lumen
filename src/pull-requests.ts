@@ -14,6 +14,7 @@ export type PullRequest = {
 export interface PullRequestProvider {
   listRecent(cwd: string): Promise<PullRequest[]>;
   currentBranch?(cwd: string): Promise<string | null>;
+  currentBranchBase?(cwd: string): Promise<string | null>;
 }
 
 const ghPullRequestSchema = type({
@@ -86,6 +87,40 @@ export class GhPullRequestProvider implements PullRequestProvider {
     if (result.error || result.code !== 0) return null;
     const branch = result.stdout.trim();
     return branch || null;
+  }
+
+  async currentBranchBase(cwd: string): Promise<string | null> {
+    const pr = await this.runProcess("gh", ["pr", "view", "--json", "baseRefName"], cwd);
+    if (!pr.error && pr.code === 0) {
+      try {
+        const data = JSON.parse(pr.stdout) as { baseRefName?: unknown };
+        if (typeof data.baseRefName === "string" && data.baseRefName) return data.baseRefName;
+      } catch {
+        // Fall through to the repository default branch.
+      }
+    }
+
+    const repository = await this.runProcess(
+      "gh",
+      ["repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"],
+      cwd,
+    );
+    if (!repository.error && repository.code === 0) {
+      const branch = repository.stdout.trim();
+      if (branch) return branch;
+    }
+
+    const remoteHead = await this.runProcess(
+      "git",
+      ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
+      cwd,
+    );
+    if (!remoteHead.error && remoteHead.code === 0) {
+      const branch = remoteHead.stdout.trim().replace(/^origin\//, "");
+      if (branch) return branch;
+    }
+
+    return null;
   }
 
   private async currentBranchPullRequest(cwd: string): Promise<PullRequest | null> {
