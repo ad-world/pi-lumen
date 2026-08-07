@@ -42,18 +42,24 @@ describe("pickPullRequest", () => {
     expect(notifications).toEqual([]);
   });
 
-  test("defaults to the current branch diff", async () => {
+  test("keeps the current branch pull request at the top without local branch diff fallback", async () => {
+    const currentPullRequest: PullRequest = {
+      ...pullRequests[0]!,
+      number: 8,
+      title: "Current pushed PR",
+      url: "https://github.com/example/repo/pull/8",
+      updatedAt: "2026-07-01T10:00:00Z",
+      isCurrentBranch: true,
+    };
     const result = await pickPullRequest(
-      context("★ Current branch · develop..feature", []),
+      context("★ #8 · Current pushed PR · contributor · updated 2026-07-01", []),
       {
-        currentBranch: async () => "feature",
-        currentBranchBase: async () => "develop",
-        listRecent: async () => pullRequests,
+        listRecent: async () => [pullRequests[0]!, currentPullRequest],
       },
-      { resolve: async () => ({ kind: "local", reference: "unused" }) },
+      { resolve: async () => ({ kind: "local", reference: "pushed-base...pushed-head" }) },
     );
 
-    expect(result?.args).toEqual(["diff", "develop..feature"]);
+    expect(result?.args).toEqual(["diff", "pushed-base...pushed-head"]);
   });
 
   test("falls back to Lumen PR mode when no local range can be proven", async () => {

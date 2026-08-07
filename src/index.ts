@@ -1,7 +1,7 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import { diffCommand } from "./command.ts";
 import { GhPullRequestDiffResolver } from "./pull-request-diff-resolver.ts";
-import { pickPullRequest } from "./pull-request-picker.ts";
+import { pickPullRequest, pullRequestDiffCommand } from "./pull-request-picker.ts";
 import { GhPullRequestProvider } from "./pull-requests.ts";
 import { ReviewFlow } from "./review-flow.ts";
 import { LumenRunner } from "./runner.ts";
@@ -26,12 +26,21 @@ export default function piLumen(pi: ExtensionAPI): void {
       }
 
       let command: ReturnType<typeof diffCommand> | null;
-      if (args.trim()) {
+      const trimmedArgs = args.trim();
+      const forcePicker = trimmedArgs === "--pick";
+      if (trimmedArgs && !forcePicker) {
         command = diffCommand(args);
       } else {
         ctx.ui.setStatus("pi-lumen-review", "Loading pull requests…");
         try {
-          command = await pickPullRequest(ctx, pullRequests, pullRequestDiffs);
+          const currentPullRequest = forcePicker
+            ? null
+            : await pullRequests.currentBranchPullRequest(ctx.cwd);
+          if (currentPullRequest) {
+            command = await pullRequestDiffCommand(ctx.cwd, currentPullRequest, pullRequestDiffs);
+          } else {
+            command = await pickPullRequest(ctx, pullRequests, pullRequestDiffs);
+          }
         } finally {
           ctx.ui.setStatus("pi-lumen-review", undefined);
         }
